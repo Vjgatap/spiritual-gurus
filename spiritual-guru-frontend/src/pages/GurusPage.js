@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-// REMOVED: import { useAuth } from '../context/AuthContext'; // Not needed for this public page
+import { Link } from 'react-router-dom'; // Import Link
 
 const GurusPage = () => {
   const [gurus, setGurus] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state for gurus
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEra, setSelectedEra] = useState('All Eras');
@@ -14,7 +14,6 @@ const GurusPage = () => {
   const GURU_API_URL = 'http://localhost:5000/api/gurus';
   const CATEGORY_API_URL = 'http://localhost:5000/api/categories';
 
-  // Fetch categories for the filter buttons (public endpoint, no token needed)
   useEffect(() => {
     const fetchCategoriesData = async () => {
       try {
@@ -27,11 +26,10 @@ const GurusPage = () => {
     fetchCategoriesData();
   }, []);
 
-  // Fetch gurus based on search term and selected era
   useEffect(() => {
     const fetchGurusData = async () => {
-      setLoading(true); // Start loading for gurus
-      setError(null); // Clear previous errors
+      setLoading(true);
+      setError(null);
       try {
         const params = {};
         if (selectedEra !== 'All Eras') {
@@ -45,7 +43,7 @@ const GurusPage = () => {
         
         const filteredGurus = res.data.filter(guru => {
             const matchesSearchTerm = searchTerm ? 
-                guru.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                guru.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                 (guru.bio && guru.bio.toLowerCase().includes(searchTerm.toLowerCase())) || 
                 (guru.era && guru.era.name && guru.era.name.toLowerCase().includes(searchTerm.toLowerCase())) : true; 
             return matchesSearchTerm;
@@ -177,21 +175,48 @@ const GurusPage = () => {
         )}
       </section>
 
-      {/* Guru Cards Display */}
+      {/* Guru Cards Display (Redesigned) */}
       <section className="w-full max-w-6xl px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {gurus.map((guru) => (
-            <div key={guru._id} className="bg-white rounded-xl shadow-lg flex flex-col items-center text-center overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              <img src={guru.imageUrl} alt={guru.name} className="w-full h-48 object-cover mb-4" />
-              <div className="p-6">
+            <div key={guru._id} className="relative bg-white rounded-xl shadow-lg flex flex-col items-center text-center overflow-hidden group hover:shadow-xl transition-shadow duration-300">
+              {/* Background Image - if available */}
+              {guru.bgImageUrl ? (
+                <img 
+                  src={guru.bgImageUrl} 
+                  alt={`${guru.fullName} Background`} 
+                  className="w-full h-32 object-cover" 
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/800x200/F3F4F6/9CA3AF?text=BG_Placeholder"; }} // Fallback
+                />
+              ) : (
+                 <div className="w-full h-32 bg-gradient-to-r from-purple-200 to-blue-200 flex items-center justify-center">
+                   <p className="text-gray-500 text-xs">No Background Image</p>
+                 </div>
+              )}
+
+              {/* Profile Image (Circular) */}
+              <div className="absolute top-24 transform -translate-y-1/2 border-4 border-white rounded-full overflow-hidden shadow-md">
+                <img 
+                  src={guru.profileImageUrl} 
+                  alt={guru.fullName} 
+                  className="w-24 h-24 object-cover rounded-full" 
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/96x96/F3F4F6/9CA3AF?text=Profile"; }} // Fallback
+                />
+              </div>
+
+              <div className="p-6 pt-16 mt-4"> {/* Adjusted padding-top to accommodate profile image */}
                 <span className="bg-yellow-200 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full mb-3 inline-block">
                   {guru.era ? guru.era.name : 'Era Not Defined'}
                 </span>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{guru.name}</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{guru.fullName}</h3>
                 <p className="text-gray-600 text-sm mb-4">{guru.bio ? guru.bio.substring(0, 100) : ''}...</p>
-                <button className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-md shadow-md hover:bg-orange-600 transition duration-300">
+                {/* Updated Learn More button to be a Link */}
+                <Link 
+                  to={`/gurus/${guru._id}`} 
+                  className="inline-block px-6 py-2 bg-orange-500 text-white font-semibold rounded-md shadow-md hover:bg-orange-600 transition duration-300"
+                >
                   Learn More
-                </button>
+                </Link>
               </div>
             </div>
           ))}

@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext'; // Import useAuth to check user role
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Public Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import GurusPage from './pages/GurusPage';
+import GuruDetailPage from './pages/GuruDetailPage'; // NEW: Import GuruDetailPage
 
 // Admin Pages
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -19,7 +20,7 @@ import UserDashboardPage from './pages/UserDashboardPage';
 
 // Component to protect routes requiring admin access
 const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth(); // Get user and loading state from AuthContext
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -29,8 +30,6 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  // If user is logged in AND has admin role, render children
-  // Otherwise, redirect to login
   return user && user.role === 'admin' ? children : <Navigate to="/login" replace />;
 };
 
@@ -45,7 +44,6 @@ const ProtectedUserRoute = ({ children }) => {
       </div>
     );
   }
-  // If any user is logged in, render children. Otherwise, redirect to login.
   return user ? children : <Navigate to="/login" replace />;
 };
 
@@ -53,7 +51,6 @@ const ProtectedUserRoute = ({ children }) => {
 function App() {
   return (
     <Router>
-      {/* AuthProvider wraps the entire application to provide global authentication state */}
       <AuthProvider>
         <Routes>
           {/* Publicly Accessible Routes */}
@@ -61,15 +58,16 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/gurus" element={<GurusPage />} />
-          <Route path="/teachings" element={<div>Teachings Page (Public)</div>} /> {/* Placeholder */}
-          <Route path="/about" element={<div>About Page (Public)</div>} /> {/* Placeholder */}
-          <Route path="/books" element={<div>Sacred Books Page (Public)</div>} /> {/* Placeholder */}
-          <Route path="/category/:eraName" element={<div>Category Detail Page (Public)</div>} /> {/* Placeholder */}
+          <Route path="/gurus/:id" element={<GuruDetailPage />} /> {/* NEW: Guru Detail Route */}
+          <Route path="/teachings" element={<div>Teachings Page (Public)</div>} />
+          <Route path="/about" element={<div>About Page (Public)</div>} />
+          <Route path="/books" element={<div>Sacred Books Page (Public)</div>} />
+          <Route path="/category/:eraName" element={<div>Category Detail Page (Public)</div>} />
 
-          {/* User Protected Routes (for any logged-in user) */}
+          {/* User Protected Routes */}
           <Route path="/user-dashboard" element={<ProtectedUserRoute><UserDashboardPage /></ProtectedUserRoute>} />
 
-          {/* Admin Protected Routes: Use AdminRoute to wrap components that only admins can see */}
+          {/* Admin Protected Routes */}
           <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><CategoryManagementPage /></AdminRoute>} />
           <Route path="/admin/gurus" element={<AdminRoute><GuruManagementPage /></AdminRoute>} />

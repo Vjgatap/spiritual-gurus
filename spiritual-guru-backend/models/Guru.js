@@ -2,38 +2,73 @@ const mongoose = require('mongoose');
 
 const guruSchema = mongoose.Schema(
   {
-    name: {
+    fullName: { // Renamed from 'name' to 'fullName' to match request
       type: String,
       required: true,
     },
-    era: {
-      type: mongoose.Schema.Types.ObjectId, // References the Category model
-      required: true,
-      ref: 'Category', // This explicitly links the guru to a Category document
-    },
-    bio: {
-      type: String,
+    dob: { // Date of Birth
+      type: Date,
       required: true,
     },
-    imageUrl: {
-      type: String,
-      required: true, // URL for the guru's image
+    dod: { // Date of Death
+      type: Date,
+      required: false, // Optional, for living gurus
     },
-    youtubeVideoUrl: {
+    birthPlace: {
       type: String,
-      required: true, // URL for a YouTube video related to the guru
+      required: true,
     },
-    books: [ // Array of objects for books written/related to the guru
+    // Age can be derived on frontend or in backend. Storing it directly might lead to stale data.
+    // Let's derive it or display DOB/DOD. If you specifically need a stored 'age', let me know.
+    
+    guruType: { // E.g., nastik, bhaktiyog, karmyogi
+      type: String,
+      required: true,
+      enum: ['Nastik', 'Bhaktiyog', 'Karmyogi', 'Jnanayog', 'Rajayog', 'Other'], // Example enum values
+      default: 'Other',
+    },
+    aashram: { // Guru's primary aashram/organization
+      type: String,
+      required: false,
+    },
+    era: { // Category remains the same
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'Category',
+    },
+    bio: { // Biography remains
+      type: String,
+      required: true,
+    },
+    profileImageUrl: { // New: For circular profile image
+      type: String,
+      required: true,
+    },
+    bgImageUrl: { // New: For background long image (like LinkedIn)
+      type: String,
+      required: false, // Optional background image
+    },
+    images: [ // Array of image URLs for gallery (100+ images)
       {
-        title: {
-          type: String,
-          required: true,
-        },
+        url: { type: String, required: true },
+        caption: { type: String, required: false } // Optional: caption for each image
+      }
+    ],
+    videos: [ // Array of video URLs (YouTube)
+      {
+        url: { type: String, required: true },
+        title: { type: String, required: false } // Optional: title for each video
+      }
+    ],
+    books: [ // Array of book objects, now including PDF URL
+      {
+        title: { type: String, required: true },
+        pdfUrl: { type: String, required: false }, // URL to PDF, optional
       },
     ],
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 

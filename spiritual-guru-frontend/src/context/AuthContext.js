@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true); // Initial loading state for auth check
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Still needed for login/register/logout redirects
 
   // useEffect for initial authentication check on component mount
   useEffect(() => {
@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // Attempt to get user profile with the stored token
           const res = await axios.get('http://localhost:5000/api/users/profile', {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -24,15 +23,15 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data); // Set user from profile data, which includes the role
           // console.log('User fetched on load:', res.data); // Debugging: Check user object
           
-          // No immediate redirect here. Let the routes in App.js handle initial rendering based on URL.
-          // After auth state is set, if the user then tries to access a protected route,
-          // AdminRoute/ProtectedUserRoute will redirect them if they don't have access.
+          // REMOVED: Automatic redirection on initial load based on role.
+          // The routes in App.js will handle protection and redirection for specific paths.
+          // If a user goes to '/', they will see HomePage regardless of login status.
 
         } catch (error) {
           console.error('Failed to fetch user profile on load or token invalid:', error);
           localStorage.removeItem('token'); // Clear invalid/expired token
           setUser(null); // Clear user state
-          // No immediate redirect here either. Let the routes handle it.
+          // No immediate redirect here if token is invalid. Let the router handle it.
         } finally {
           setLoading(false); // ALWAYS set loading to false after check completes
         }
@@ -41,7 +40,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
     checkUser();
-  }, [/* No navigate dependency here, as it's not performing a direct navigation */]); // Removed navigate from dependencies for this effect
+  }, []); // Dependency array is empty because 'navigate' is not directly used for initial load redirection here.
 
   // Login function
   const login = async (email, password) => {
@@ -50,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', res.data.token); // Store new token
       setUser(res.data); // Set user data (includes role)
       
-      // Redirect based on user role after successful login
+      // Redirect based on user role AFTER successful login action
       if (res.data.role === 'admin') {
         navigate('/admin'); // Admin goes to admin dashboard
       } else {
